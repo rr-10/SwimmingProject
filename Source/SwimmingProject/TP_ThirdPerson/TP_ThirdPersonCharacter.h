@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "SwimmingProject/SwimInterface.h"
 #include "TP_ThirdPersonCharacter.generated.h"
 
 UCLASS(config=Game)
-class ATP_ThirdPersonCharacter : public ACharacter
+class ATP_ThirdPersonCharacter : public ACharacter, public ISwimInterface
 {
 	GENERATED_BODY()
 
@@ -18,12 +19,28 @@ class ATP_ThirdPersonCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
 public:
 	ATP_ThirdPersonCharacter();
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Input)
 	float TurnRateGamepad;
+
+	// Interface override functions
+	virtual bool EnterWater_Implementation() override;
+	
+	virtual bool ExitWater_Implementation() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Water)
+	bool InWater;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Water)
+	float WaterZ;
+
+	bool SwimDoOnce, WalkDoOnce;
+
+	FTimerHandle SwimmingTimerHandle;
 
 protected:
 
@@ -50,6 +67,9 @@ protected:
 
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
+	
+	UFUNCTION()
+	void Swimming();
 
 protected:
 	// APawn interface

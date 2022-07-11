@@ -6,6 +6,7 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
+#include "GameFramework/PhysicsVolume.h"
 #include "GameFramework/SpringArmComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -47,6 +48,9 @@ ATP_ThirdPersonCharacter::ATP_ThirdPersonCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	// Set timer for the swimming function
+	GetWorld()->GetTimerManager().SetTimer(SwimmingTimerHandle, this, &ATP_ThirdPersonCharacter::Swimming, 1.0f, true);
+	
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -127,3 +131,55 @@ void ATP_ThirdPersonCharacter::MoveRight(float Value)
 		AddMovementInput(Direction, Value);
 	}
 }
+
+// Instead of tick, the function runs using the timer
+void ATP_ThirdPersonCharacter::Swimming()
+{
+	float DifferenceZ = WaterZ - GetActorLocation().Z;
+	float HalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	bool WaterVolume = GetCharacterMovement()->GetPhysicsVolume()->bWaterVolume;
+	
+	//bool SwimDoOnce, WalkDoOnce;
+	
+	if (InWater)
+	{
+		if(DifferenceZ > HalfHeight)
+		{
+			// Do Once Macro
+			if(SwimDoOnce)
+			{
+				WaterVolume = true;
+				GetCharacterMovement()->SetMovementMode(MOVE_Swimming);
+				SwimDoOnce = !SwimDoOnce;
+			}
+		}
+		
+		else
+		{
+			if(DifferenceZ < HalfHeight)
+			{
+				if(WalkDoOnce)
+				{
+					WaterVolume = false;
+					GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+					WalkDoOnce = !WalkDoOnce;
+				}
+			}
+		}
+	}
+	
+}
+
+bool ATP_ThirdPersonCharacter::EnterWater_Implementation()
+{
+	InWater = true;
+	WaterZ = GetActorLocation().Z;
+	return false;
+}
+
+bool ATP_ThirdPersonCharacter::ExitWater_Implementation()
+{
+	InWater = false;
+	return false;
+}
+
