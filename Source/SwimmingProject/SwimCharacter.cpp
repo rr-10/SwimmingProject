@@ -49,10 +49,18 @@ ASwimCharacter::ASwimCharacter()
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	// Set timer for the swimming function
-	//GetWorld()->GetTimerManager().SetTimer(SwimmingTimerHandle, this, &ATP_ThirdPersonCharacter::Swimming, 1.0f, true);
+	//GetWorld()->GetTimerManager().SetTimer(SwimmingTimerHandle, this, &ASwimCharacter::Swimming, 1.0f, true);
 	
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	// Declare Trigger Capsule
+	TriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule"));
+	TriggerCapsule->InitCapsuleSize(55.0f, 96.0f);
+	TriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
+	TriggerCapsule->SetupAttachment(RootComponent);
+
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -116,6 +124,9 @@ void ASwimCharacter::MoveForward(float Value)
 		// get forward vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		AddMovementInput(Direction, Value);
+
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("walking"));
+		
 	}
 }
 
@@ -132,6 +143,12 @@ void ASwimCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+void ASwimCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	GLog->Log("Ciao");
 }
 
 // Instead of tick, the function runs using the timer
@@ -172,16 +189,15 @@ void ASwimCharacter::Swimming()
 	
 }
 
-bool ASwimCharacter::EnterWater_Implementation()
+// Code below was supposed to work but it was not being implemented
+/*void ASwimCharacter::EnterWater_Implementation()
 {
 	InWater = true;
 	WaterZ = GetActorLocation().Z;
-	return false;
 }
 
-bool ASwimCharacter::ExitWater_Implementation()
+void ASwimCharacter::ExitWater_Implementation()
 {
 	InWater = false;
-	return false;
-}
+}*/
 

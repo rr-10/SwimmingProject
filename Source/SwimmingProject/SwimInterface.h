@@ -13,9 +13,6 @@ class USwimInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class SWIMMINGPROJECT_API ISwimInterface
 {
 	GENERATED_BODY()
@@ -25,8 +22,8 @@ public:
 
 	// Can be called in both Blueprint or C++
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category=Swim)
-	bool EnterWater();
+	void EnterWater();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category=Swim)
-	bool ExitWater();
+	void ExitWater();
 };

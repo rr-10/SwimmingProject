@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "SwimmingProject/SwimInterface.h"
+//#include "SwimmingProject/SwimInterface.h"
 #include "SwimCharacter.generated.h"
 
 UCLASS(config=Game)
-class ASwimCharacter : public ACharacter, public ISwimInterface
+class ASwimCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -20,6 +20,10 @@ class ASwimCharacter : public ACharacter, public ISwimInterface
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
+	// Create trigger capsule
+	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
+	class UCapsuleComponent* TriggerCapsule;
+
 public:
 	ASwimCharacter();
 
@@ -28,14 +32,13 @@ public:
 	float TurnRateGamepad;
 
 	// Interface override functions
-	virtual bool EnterWater_Implementation() override;
-	
-	virtual bool ExitWater_Implementation() override;
+	// void EnterWater_Implementation() override;
+	// void ExitWater_Implementation() override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Water)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
 	bool InWater;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Water)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
 	float WaterZ;
 
 	bool SwimDoOnce, WalkDoOnce;
@@ -70,6 +73,8 @@ protected:
 	
 	UFUNCTION()
 	void Swimming();
+
+	virtual void Tick(float DeltaTime);
 
 protected:
 	// APawn interface
