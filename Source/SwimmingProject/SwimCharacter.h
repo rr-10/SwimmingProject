@@ -31,6 +31,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Input)
 	float TurnRateGamepad;
 
+    // Tick, when needed
+    virtual void Tick(float DeltaTime) override;
+    
+    float GetAirValue() const { return AirValue; }
+	void SetAirValue(float val) { AirValue = val; }
+
+	float GetMaxAir() const { return MaxAirValue; }
+	void SetMaxAir(float val) { MaxAirValue = val; }
+	
 	// Interface override functions
 	// void EnterWater_Implementation() override;
 	// void ExitWater_Implementation() override;
@@ -74,7 +83,10 @@ protected:
 	UFUNCTION()
 	void Swimming();
 
-	virtual void Tick(float DeltaTime);
+	UPROPERTY(VisibleAnywhere)
+	class UWidgetComponent* AirWidget;
+
+	float AirValue, MaxAirValue = 30;
 
 protected:
 	// APawn interface
