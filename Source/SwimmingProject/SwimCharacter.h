@@ -21,8 +21,8 @@ class ASwimCharacter : public ACharacter
 	class UCameraComponent* FollowCamera;
 
 	// Create trigger capsule
-	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
-	class UCapsuleComponent* TriggerCapsule;
+	//UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
+	//class UCapsuleComponent* TriggerCapsule;
 
 public:
 	ASwimCharacter();
@@ -34,11 +34,11 @@ public:
     // Tick, when needed
     virtual void Tick(float DeltaTime) override;
     
-    float GetAirValue() const { return AirValue; }
-	void SetAirValue(float val) { AirValue = val; }
-
-	float GetMaxAir() const { return MaxAirValue; }
-	void SetMaxAir(float val) { MaxAirValue = val; }
+ //    float GetAirValue() const { return AirValue; }
+	// void SetAirValue(float val) { AirValue = val; }
+ //
+	// float GetMaxAir() const { return MaxAirValue; }
+	// void SetMaxAir(float val) { MaxAirValue = val; }
 	
 	// Interface override functions
 	// void EnterWater_Implementation() override;
@@ -83,10 +83,10 @@ protected:
 	UFUNCTION()
 	void Swimming();
 
-	UPROPERTY(VisibleAnywhere)
-	class UWidgetComponent* AirWidget;
-
-	float AirValue, MaxAirValue = 30;
+	// UPROPERTY(VisibleAnywhere)
+	// class UWidgetComponent* AirWidget;
+	//
+	// float AirValue, MaxAirValue = 30;
 
 protected:
 	// APawn interface
