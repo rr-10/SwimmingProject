@@ -107,6 +107,16 @@ void ASwimCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * TurnRateGamepad * GetWorld()->GetDeltaSeconds());
 }
 
+void ASwimCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &ASwimCharacter::CountDown, 1.f, true, 0.0);
+	GetWorldTimerManager().SetTimer(StaminaHandle, this, &ASwimCharacter::StaminaBar, 1.0f, true);
+}
+
+
 void ASwimCharacter::MoveForward(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
@@ -182,6 +192,36 @@ void ASwimCharacter::Swimming()
 	
 }
 
+void ASwimCharacter::CountDown()
+{
+	if(Seconds != 0)
+	{
+		Seconds = Seconds - 1;
+	}
+	else
+	{
+		if(Minutes == 0)
+		{
+			// Game Over depending on rings collected
+		}
+		else
+		{
+			Minutes = Minutes - 1;
+			Seconds = 59;
+		}
+	}
+}
+
+void ASwimCharacter::StaminaBar()
+{
+	if (Stamina >= 1)
+		Stamina = 1;
+	else
+	{
+		++Stamina;
+	}
+}
+
 // Code below was supposed to work but it was not being implemented
 /*void ASwimCharacter::EnterWater_Implementation()
 {
@@ -193,4 +233,6 @@ void ASwimCharacter::ExitWater_Implementation()
 {
 	InWater = false;
 }*/
+
+
 

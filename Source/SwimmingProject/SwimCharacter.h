@@ -34,9 +34,9 @@ public:
     // Tick, when needed
     virtual void Tick(float DeltaTime) override;
     
- //    float GetAirValue() const { return AirValue; }
+    // float GetAirValue() const { return AirValue; }
 	// void SetAirValue(float val) { AirValue = val; }
- //
+
 	// float GetMaxAir() const { return MaxAirValue; }
 	// void SetMaxAir(float val) { MaxAirValue = val; }
 	
@@ -56,6 +56,7 @@ public:
 
 protected:
 
+	virtual void BeginPlay() override;
 	/** Called for forwards/backward input */
 	void MoveForward(float Value);
 
@@ -87,6 +88,27 @@ protected:
 	// class UWidgetComponent* AirWidget;
 	//
 	// float AirValue, MaxAirValue = 30;
+
+	void CountDown();
+
+	UPROPERTY(BlueprintReadOnly)
+	int Minutes = 2;
+
+	UPROPERTY(BlueprintReadOnly)
+	int Seconds = 0;
+
+	UPROPERTY(BlueprintReadOnly)
+	int MaxRings = 5;
+
+	UPROPERTY(BlueprintReadWrite)
+	int CollectedRings = 0;
+
+	void StaminaBar();
+	
+	UPROPERTY(BlueprintReadWrite)
+	float Stamina = 0;
+
+	FTimerHandle StaminaHandle;
 
 protected:
 	// APawn interface
