@@ -1,6 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "SwimCharacter.h"
+
+#include <string>
+
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -8,6 +11,8 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/PhysicsVolume.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "TimerManager.h"
+#include "Kismet/KismetStringLibrary.h"
 
 //////////////////////////////////////////////////////////////////////////
 // SwimCharacter
@@ -66,7 +71,9 @@ void ASwimCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-
+	PlayerInputComponent->BindAction("FastSwim", IE_Pressed, this, &ASwimCharacter::StartFastSwimming);
+	PlayerInputComponent->BindAction("FastSwim", IE_Released, this, &ASwimCharacter::EndFastSwimming);
+	
 	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &ASwimCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("Move Right / Left", this, &ASwimCharacter::MoveRight);
 
@@ -113,7 +120,8 @@ void ASwimCharacter::BeginPlay()
 
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, this, &ASwimCharacter::CountDown, 1.f, true, 0.0);
-	GetWorldTimerManager().SetTimer(StaminaHandle, this, &ASwimCharacter::StaminaBar, 1.0f, true);
+	// Regen of stamina
+	//GetWorldTimerManager().SetTimer(StaminaHandle, this, &ASwimCharacter::DecreaseStamina, 1.0f, true);
 }
 
 
@@ -129,10 +137,28 @@ void ASwimCharacter::MoveForward(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		AddMovementInput(Direction, Value);
 
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("walking"));
-		
+		//FString ValueString = FString::SanitizeFloat(Value);
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, ValueString);
 	}
 }
+
+void ASwimCharacter::StartFastSwimming()
+{
+	//float Speed = CharacterMovement->MaxSwimSpeed;
+	GetCharacterMovement()->MaxSwimSpeed = 300;
+	IsFastSwimming = true;
+	DecreaseStamina();
+	FString SpeedString = FString::SanitizeFloat(GetCharacterMovement()->MaxSwimSpeed);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("FAST SWIM") + SpeedString);
+}
+
+void ASwimCharacter::EndFastSwimming()
+{
+	GetCharacterMovement()->MaxSwimSpeed = 150;
+	IsFastSwimming = false;
+	RecuperateStamina();
+}
+
 
 void ASwimCharacter::MoveRight(float Value)
 {
@@ -152,6 +178,14 @@ void ASwimCharacter::MoveRight(float Value)
 void ASwimCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//GetCharacterMovement()->MaxSwimSpeed = 300;
+	// float SwimSpeed = GetCharacterMovement()->BrakingDecelerationSwimming;
+	// FString SwimString = FString::SanitizeFloat(SwimSpeed);
+	//FString SwimString = FString::
+	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, SwimString);
+	//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, UKismetStringLibrary::Conv_BoolToString(IsFastSwimming));
+
 }
 
 // Instead of tick, the function runs using the timer
@@ -212,7 +246,43 @@ void ASwimCharacter::CountDown()
 	}
 }
 
-void ASwimCharacter::StaminaBar()
+void ASwimCharacter::RecuperateStamina()
+{
+	Stamina++;
+
+	Stamina = FMath::Clamp(Stamina, MinStamina, MaxStamina);
+
+	if(Stamina != MaxStamina)
+	{
+		if(!IsFastSwimming)
+		{
+			RecuperateStamina();
+		}
+	}
+}
+
+void ASwimCharacter::DecreaseStamina()
+{
+	Stamina--;
+
+	Stamina = FMath::Clamp(Stamina, MinStamina, MaxStamina);
+	
+	if(Stamina == 0)
+	{
+		EndFastSwimming();
+	}
+
+	else
+	{
+		if(IsFastSwimming)
+		{
+			DecreaseStamina();
+		}
+	}
+	
+}
+
+/*void ASwimCharacter::StaminaBar()
 {
 	if (Stamina >= 1)
 		Stamina = 1;
@@ -220,7 +290,7 @@ void ASwimCharacter::StaminaBar()
 	{
 		++Stamina;
 	}
-}
+}*/
 
 // Code below was supposed to work but it was not being implemented
 /*void ASwimCharacter::EnterWater_Implementation()

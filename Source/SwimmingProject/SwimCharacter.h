@@ -54,9 +54,16 @@ public:
 
 	FTimerHandle SwimmingTimerHandle;
 
-protected:
+	//class UCharacterMovementComponent* CharacterMovement = GetCharacterMovement();
 
+protected:
+	
 	virtual void BeginPlay() override;
+
+	void StartFastSwimming();
+	void EndFastSwimming();
+	//void ToggleSwimming();
+	
 	/** Called for forwards/backward input */
 	void MoveForward(float Value);
 
@@ -103,13 +110,24 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	int CollectedRings = 0;
 
-	void StaminaBar();
+	//void StaminaBar();
+	void DecreaseStamina();
+	void RecuperateStamina();
 	
 	UPROPERTY(BlueprintReadWrite)
-	float Stamina = 0;
+	int Stamina = 100;
+	
+	int MinStamina;
+
+	UPROPERTY(BlueprintReadWrite)
+	int MaxStamina = 100;
 
 	FTimerHandle StaminaHandle;
+	FTimerHandle SwimmingHandle;
 
+	UPROPERTY(BlueprintReadWrite)
+	bool IsFastSwimming = false;
+	
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
