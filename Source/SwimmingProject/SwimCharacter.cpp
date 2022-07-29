@@ -54,9 +54,6 @@ ASwimCharacter::ASwimCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-
-	// Set timer for the swimming function
-	//GetWorld()->GetTimerManager().SetTimer(SwimmingTimerHandle, this, &ASwimCharacter::Swimming, 1.0f, true);
 	
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -99,10 +96,11 @@ void ASwimCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	//PlayerInputComponent->BindAxis("Look Up / Down Gamepad", this, &ATP_ThirdPersonCharacter::LookUpAtRate);
 
 	// handle touch devices
-	PlayerInputComponent->BindTouch(IE_Pressed, this, &ASwimCharacter::TouchStarted);
-	PlayerInputComponent->BindTouch(IE_Released, this, &ASwimCharacter::TouchStopped);
+	//PlayerInputComponent->BindTouch(IE_Pressed, this, &ASwimCharacter::TouchStarted);
+	//PlayerInputComponent->BindTouch(IE_Released, this, &ASwimCharacter::TouchStopped);
 }
 
+/*
 void ASwimCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
 	Jump();
@@ -123,7 +121,7 @@ void ASwimCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * TurnRateGamepad * GetWorld()->GetDeltaSeconds());
-}
+}*/
 
 void ASwimCharacter::BeginPlay()
 {
@@ -269,12 +267,12 @@ void ASwimCharacter::CountDown()
 	}
 }
 
-void ASwimCharacter::SetInstanceVariables()
+// Inactive function which would crash the project and memory allocations
+/*void ASwimCharacter::SetInstanceVariables()
 {
 	CollectedRings = SwimInstance->InstanceRings;
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(SwimInstance->InstanceRings));
-}
-
+}*/
 
 /*void ASwimCharacter::RecuperateStamina()
 {
@@ -323,17 +321,28 @@ void ASwimCharacter::SetInstanceVariables()
 
 void ASwimCharacter::StartFastSwim()
 {
-	if(Stamina > 10.0f)
+	//if((Stamina > 10.0f)||(Stamina < 10.0f))
+	if((Stamina > 10.0f)||(Stamina < 10.0f))
 	{
 		IsFastSwimming = true;
 		ControlFastSwimTimer(true);
 	}
+
+	/*else if(Stamina < 10.0f)
+	{
+		IsFastSwimming = true;
+		ControlFastSwimTimer(true);
+		
+	}*/
 	
 	else if(Stamina <= 0.0f)
 	{
+		//IsFastSwimming = false;
 		ControlFastSwimTimer(false);
 	}
 
+	// Code here that detects when stamina is low while pressing shift
+	
 	SwimmingSpeed = 300;
 	GetCharacterMovement()->MaxSwimSpeed = SwimmingSpeed;
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(SwimmingSpeed));
@@ -345,7 +354,7 @@ void ASwimCharacter::EndFastSwim()
 	ControlFastSwimTimer(false); 
 	SwimmingSpeed = 150;
 	GetCharacterMovement()->MaxSwimSpeed = SwimmingSpeed;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(SwimmingSpeed));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::SanitizeFloat(SwimmingSpeed));
 }
 
 void ASwimCharacter::HandleFastSwim()
@@ -391,7 +400,6 @@ void ASwimCharacter::ControlFastSwimTimer(bool IsFastSwim)
 	else
 	{
 		GetWorldTimerManager().UnPauseTimer(StaminaHandle);
-
 	}
 }
 

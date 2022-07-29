@@ -20,10 +20,6 @@ class ASwimCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
-	// Create trigger capsule
-	//UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
-	//class UCapsuleComponent* TriggerCapsule;
-
 public:
 	ASwimCharacter();
 	
@@ -52,18 +48,11 @@ public:
 
 	bool SwimDoOnce, WalkDoOnce;
 
-	FTimerHandle SwimmingTimerHandle;
-
 	class USwimInstance* SwimInstance;
-	//class UCharacterMovementComponent* CharacterMovement = GetCharacterMovement();
 
 protected:
 	
 	virtual void BeginPlay() override;
-
-	//void StartFastSwimming();
-	//void EndFastSwimming();
-	//void ToggleSwimming();
 
 	void StartFastSwim();
 	void EndFastSwim();
@@ -79,19 +68,19 @@ protected:
 	 * Called via input to turn at a given rate. 
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
-	void TurnAtRate(float Rate);
+	//void TurnAtRate(float Rate);
 
 	/**
 	 * Called via input to turn look up/down at a given rate. 
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
-	void LookUpAtRate(float Rate);
+	//void LookUpAtRate(float Rate);
 
 	/** Handler for when a touch input begins. */
-	void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
+	//void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
 
 	/** Handler for when a touch input stops. */
-	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
+	//void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 	
 	UFUNCTION()
 	void Swimming();
@@ -104,7 +93,7 @@ protected:
 	void CountDown();
 
 	UPROPERTY(BlueprintReadOnly)
-	int Minutes = 1; // 2 minutes
+	int Minutes = 2;
 
 	UPROPERTY(BlueprintReadOnly)
 	int Seconds = 0;
@@ -115,14 +104,10 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	int CollectedRings = 0;
 
+	bool IsGameOver;
+	
 	UFUNCTION()
 	void SetInstanceVariables();
-
-	bool IsGameOver;
-
-	//void StaminaBar();
-	//void DecreaseStamina();
-	//void RecuperateStamina();
 
 	void RegenStamina();
 	void LoseStamina(float Value);
