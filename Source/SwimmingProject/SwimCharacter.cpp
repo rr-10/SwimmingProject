@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "SwimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -62,7 +63,12 @@ ASwimCharacter::ASwimCharacter()
 
 	PrimaryActorTick.bCanEverTick = true;
 
-	//USwimGameInstance GameInstance;
+	//SwimInstance = Cast<UGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	if(SwimInstance != nullptr)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Game Instance loaded");
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -252,7 +258,7 @@ void ASwimCharacter::CountDown()
 
 		else if(Minutes == 0 && Seconds <= 5)
 		{
-			SetInstanceVariables();
+			//SetInstanceVariables();
 		}
 		
 		else
@@ -265,8 +271,8 @@ void ASwimCharacter::CountDown()
 
 void ASwimCharacter::SetInstanceVariables()
 {
-	CollectedRings = GameInstance->CurrentRings;
-	//CurrentRings = CollectedRings;
+	CollectedRings = SwimInstance->InstanceRings;
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(SwimInstance->InstanceRings));
 }
 
 

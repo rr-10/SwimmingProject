@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 //#include "SwimmingProject/SwimInterface.h"
-#include "SwimGameInstance.h"
 #include "SwimCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -27,9 +26,6 @@ class ASwimCharacter : public ACharacter
 
 public:
 	ASwimCharacter();
-
-	
-	class USwimGameInstance* GameInstance;
 	
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Input)
@@ -58,6 +54,7 @@ public:
 
 	FTimerHandle SwimmingTimerHandle;
 
+	class USwimInstance* SwimInstance;
 	//class UCharacterMovementComponent* CharacterMovement = GetCharacterMovement();
 
 protected:
@@ -118,6 +115,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	int CollectedRings = 0;
 
+	UFUNCTION()
 	void SetInstanceVariables();
 
 	bool IsGameOver;
