@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 //#include "SwimmingProject/SwimInterface.h"
+#include "SwimGameInstance.h"
 #include "SwimCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -27,6 +28,9 @@ class ASwimCharacter : public ACharacter
 public:
 	ASwimCharacter();
 
+	
+	class USwimGameInstance* GameInstance;
+	
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Input)
 	float TurnRateGamepad;
@@ -60,9 +64,13 @@ protected:
 	
 	virtual void BeginPlay() override;
 
-	void StartFastSwimming();
-	void EndFastSwimming();
+	//void StartFastSwimming();
+	//void EndFastSwimming();
 	//void ToggleSwimming();
+
+	void StartFastSwim();
+	void EndFastSwim();
+	void HandleFastSwim();
 	
 	/** Called for forwards/backward input */
 	void MoveForward(float Value);
@@ -99,7 +107,7 @@ protected:
 	void CountDown();
 
 	UPROPERTY(BlueprintReadOnly)
-	int Minutes = 2;
+	int Minutes = 1; // 2 minutes
 
 	UPROPERTY(BlueprintReadOnly)
 	int Seconds = 0;
@@ -110,12 +118,22 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	int CollectedRings = 0;
 
+	void SetInstanceVariables();
+
+	bool IsGameOver;
+
 	//void StaminaBar();
-	void DecreaseStamina();
-	void RecuperateStamina();
-	
+	//void DecreaseStamina();
+	//void RecuperateStamina();
+
+	void RegenStamina();
+	void LoseStamina(float Value);
+	void ControlFastSwimTimer(bool IsFastSwimming);
+
 	UPROPERTY(BlueprintReadWrite)
-	int Stamina = 100;
+	//int Stamina = 100;
+	float Stamina;
+	float SwimmingSpeed;
 	
 	int MinStamina;
 

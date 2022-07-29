@@ -12,6 +12,7 @@
 #include "GameFramework/PhysicsVolume.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -60,6 +61,8 @@ ASwimCharacter::ASwimCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 	PrimaryActorTick.bCanEverTick = true;
+
+	//USwimGameInstance GameInstance;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -71,8 +74,10 @@ void ASwimCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-	PlayerInputComponent->BindAction("FastSwim", IE_Pressed, this, &ASwimCharacter::StartFastSwimming);
-	PlayerInputComponent->BindAction("FastSwim", IE_Released, this, &ASwimCharacter::EndFastSwimming);
+	//PlayerInputComponent->BindAction("FastSwim", IE_Pressed, this, &ASwimCharacter::StartFastSwimming);
+	//PlayerInputComponent->BindAction("FastSwim", IE_Released, this, &ASwimCharacter::EndFastSwimming);
+	PlayerInputComponent->BindAction("FastSwim", IE_Pressed, this, &ASwimCharacter::StartFastSwim);
+	PlayerInputComponent->BindAction("FastSwim", IE_Released, this, &ASwimCharacter::EndFastSwim);
 	
 	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &ASwimCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("Move Right / Left", this, &ASwimCharacter::MoveRight);
@@ -122,8 +127,12 @@ void ASwimCharacter::BeginPlay()
 	GetWorldTimerManager().SetTimer(TimerHandle, this, &ASwimCharacter::CountDown, 1.f, true, 0.0);
 	// Regen of stamina
 	//GetWorldTimerManager().SetTimer(StaminaHandle, this, &ASwimCharacter::DecreaseStamina, 1.0f, true);
+	GetWorldTimerManager().SetTimer(StaminaHandle, this, &ASwimCharacter::RegenStamina, 1.0f, true);
+	//Stamina = 100.0f;
+	SwimmingSpeed = 150.0f;
+	GetWorldTimerManager().SetTimer(SwimmingHandle, this, &ASwimCharacter::HandleFastSwim, 1.0f, true);
+	
 }
-
 
 void ASwimCharacter::MoveForward(float Value)
 {
@@ -142,7 +151,7 @@ void ASwimCharacter::MoveForward(float Value)
 	}
 }
 
-void ASwimCharacter::StartFastSwimming()
+/*void ASwimCharacter::StartFastSwimming()
 {
 	//float Speed = CharacterMovement->MaxSwimSpeed;
 	GetCharacterMovement()->MaxSwimSpeed = 300;
@@ -150,15 +159,14 @@ void ASwimCharacter::StartFastSwimming()
 	DecreaseStamina();
 	FString SpeedString = FString::SanitizeFloat(GetCharacterMovement()->MaxSwimSpeed);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("FAST SWIM") + SpeedString);
-}
+}*/
 
-void ASwimCharacter::EndFastSwimming()
+/*void ASwimCharacter::EndFastSwimming()
 {
 	GetCharacterMovement()->MaxSwimSpeed = 150;
 	IsFastSwimming = false;
 	RecuperateStamina();
-}
-
+}*/
 
 void ASwimCharacter::MoveRight(float Value)
 {
@@ -226,6 +234,7 @@ void ASwimCharacter::Swimming()
 	
 }
 
+// Timer function
 void ASwimCharacter::CountDown()
 {
 	if(Seconds != 0)
@@ -237,7 +246,15 @@ void ASwimCharacter::CountDown()
 		if(Minutes == 0)
 		{
 			// Game Over depending on rings collected
+			IsGameOver = true;
+			UGameplayStatics::OpenLevel(this, "GameOver");
 		}
+
+		else if(Minutes == 0 && Seconds <= 5)
+		{
+			SetInstanceVariables();
+		}
+		
 		else
 		{
 			Minutes = Minutes - 1;
@@ -246,7 +263,14 @@ void ASwimCharacter::CountDown()
 	}
 }
 
-void ASwimCharacter::RecuperateStamina()
+void ASwimCharacter::SetInstanceVariables()
+{
+	CollectedRings = GameInstance->CurrentRings;
+	//CurrentRings = CollectedRings;
+}
+
+
+/*void ASwimCharacter::RecuperateStamina()
 {
 	Stamina++;
 
@@ -259,9 +283,9 @@ void ASwimCharacter::RecuperateStamina()
 			RecuperateStamina();
 		}
 	}
-}
+}*/
 
-void ASwimCharacter::DecreaseStamina()
+/*void ASwimCharacter::DecreaseStamina()
 {
 	Stamina--;
 
@@ -279,8 +303,7 @@ void ASwimCharacter::DecreaseStamina()
 			DecreaseStamina();
 		}
 	}
-	
-}
+}*/
 
 /*void ASwimCharacter::StaminaBar()
 {
@@ -291,6 +314,81 @@ void ASwimCharacter::DecreaseStamina()
 		++Stamina;
 	}
 }*/
+
+void ASwimCharacter::StartFastSwim()
+{
+	if(Stamina > 10.0f)
+	{
+		IsFastSwimming = true;
+		ControlFastSwimTimer(true);
+	}
+	
+	else if(Stamina <= 0.0f)
+	{
+		ControlFastSwimTimer(false);
+	}
+
+	SwimmingSpeed = 300;
+	GetCharacterMovement()->MaxSwimSpeed = SwimmingSpeed;
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(SwimmingSpeed));
+}
+
+void ASwimCharacter::EndFastSwim()
+{
+	IsFastSwimming = false;
+	ControlFastSwimTimer(false); 
+	SwimmingSpeed = 150;
+	GetCharacterMovement()->MaxSwimSpeed = SwimmingSpeed;
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(SwimmingSpeed));
+}
+
+void ASwimCharacter::HandleFastSwim()
+{
+	if(IsFastSwimming)
+	{
+		LoseStamina(2.0f);
+		if(Stamina <= 0.0f)
+			EndFastSwim();
+	}
+}
+
+
+void ASwimCharacter::RegenStamina()
+{
+	
+	if(Stamina >= 100.0f)
+		Stamina = 100.0f;
+	else
+	{
+		Stamina++;
+		//GetWorldTimerManager().UnPauseTimer(StaminaHandle);
+	}
+}
+
+void ASwimCharacter::LoseStamina(float Value)
+{
+	if(Stamina - Value < 0.0f)
+	{
+		Stamina = 0.0f;
+	}
+	else 
+		Stamina -= Value;
+	//GetWorldTimerManager().PauseTimer(StaminaHandle);
+}
+
+void ASwimCharacter::ControlFastSwimTimer(bool IsFastSwim)
+{
+	if(IsFastSwimming)
+	{
+		GetWorldTimerManager().PauseTimer(StaminaHandle);
+	}
+	else
+	{
+		GetWorldTimerManager().UnPauseTimer(StaminaHandle);
+
+	}
+}
+
 
 // Code below was supposed to work but it was not being implemented
 /*void ASwimCharacter::EnterWater_Implementation()
