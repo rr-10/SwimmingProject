@@ -133,7 +133,7 @@ void ASwimCharacter::BeginPlay()
 	//GetWorldTimerManager().SetTimer(StaminaHandle, this, &ASwimCharacter::DecreaseStamina, 1.0f, true);
 	GetWorldTimerManager().SetTimer(StaminaHandle, this, &ASwimCharacter::RegenStamina, 1.0f, true);
 	//Stamina = 100.0f;
-	SwimmingSpeed = 150.0f;
+	SwimmingSpeed = 200.0f;
 	GetWorldTimerManager().SetTimer(SwimmingHandle, this, &ASwimCharacter::HandleFastSwim, 1.0f, true);
 	
 }
@@ -352,7 +352,7 @@ void ASwimCharacter::EndFastSwim()
 {
 	IsFastSwimming = false;
 	ControlFastSwimTimer(false); 
-	SwimmingSpeed = 150;
+	SwimmingSpeed = 200;
 	GetCharacterMovement()->MaxSwimSpeed = SwimmingSpeed;
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::SanitizeFloat(SwimmingSpeed));
 }
