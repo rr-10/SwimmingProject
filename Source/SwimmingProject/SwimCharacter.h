@@ -5,7 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 //#include "SwimmingProject/SwimInterface.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
 #include "SwimCharacter.generated.h"
+
 
 UCLASS(config=Game)
 class ASwimCharacter : public ACharacter
@@ -29,16 +32,6 @@ public:
 
     // Tick, when needed
     virtual void Tick(float DeltaTime) override;
-    
-    // float GetAirValue() const { return AirValue; }
-	// void SetAirValue(float val) { AirValue = val; }
-
-	// float GetMaxAir() const { return MaxAirValue; }
-	// void SetMaxAir(float val) { MaxAirValue = val; }
-	
-	// Interface override functions
-	// void EnterWater_Implementation() override;
-	// void ExitWater_Implementation() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
 	bool InWater;
@@ -49,6 +42,9 @@ public:
 	bool SwimDoOnce, WalkDoOnce;
 
 	class USwimInstance* SwimInstance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
+	USoundCue* CountDownFX;
 
 protected:
 	
@@ -63,32 +59,9 @@ protected:
 
 	/** Called for side to side input */
 	void MoveRight(float Value);
-
-	/** 
-	 * Called via input to turn at a given rate. 
-	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-	 */
-	//void TurnAtRate(float Rate);
-
-	/**
-	 * Called via input to turn look up/down at a given rate. 
-	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-	 */
-	//void LookUpAtRate(float Rate);
-
-	/** Handler for when a touch input begins. */
-	//void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
-
-	/** Handler for when a touch input stops. */
-	//void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 	
 	UFUNCTION()
 	void Swimming();
-
-	// UPROPERTY(VisibleAnywhere)
-	// class UWidgetComponent* AirWidget;
-	//
-	// float AirValue, MaxAirValue = 30;
 
 	void CountDown();
 
@@ -106,8 +79,8 @@ protected:
 
 	bool IsGameOver;
 	
-	UFUNCTION()
-	void SetInstanceVariables();
+	//UFUNCTION()
+	//void SetInstanceVariables();
 
 	void RegenStamina();
 	void LoseStamina(float Value);
@@ -117,7 +90,6 @@ protected:
 	//int Stamina = 100;
 	float Stamina;
 	float SwimmingSpeed;
-	
 	int MinStamina;
 
 	UPROPERTY(BlueprintReadWrite)
@@ -139,5 +111,9 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+private:
+
+	UAudioComponent* TimerAudioComp;
 };
 

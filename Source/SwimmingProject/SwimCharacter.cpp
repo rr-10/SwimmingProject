@@ -14,6 +14,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Kismet/KismetStringLibrary.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -66,9 +67,18 @@ ASwimCharacter::ASwimCharacter()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Game Instance loaded");
 	}
+	
+	static ConstructorHelpers::FObjectFinder<USoundCue> CountFXObj (TEXT("SoundCue'/Game/Sounds/5SecsLeft_Cue.5SecsLeft_Cue'"));
+	if(CountFXObj.Succeeded())
+	{
+		CountDownFX = CountFXObj.Object;
+
+		TimerAudioComp = CreateDefaultSubobject<UAudioComponent>(TEXT("TimerAudioComp"));
+		TimerAudioComp->SetupAttachment(RootComponent);
+	}
+	
 }
 
-//////////////////////////////////////////////////////////////////////////
 // Input
 
 void ASwimCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -77,51 +87,13 @@ void ASwimCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-	//PlayerInputComponent->BindAction("FastSwim", IE_Pressed, this, &ASwimCharacter::StartFastSwimming);
-	//PlayerInputComponent->BindAction("FastSwim", IE_Released, this, &ASwimCharacter::EndFastSwimming);
 	PlayerInputComponent->BindAction("FastSwim", IE_Pressed, this, &ASwimCharacter::StartFastSwim);
 	PlayerInputComponent->BindAction("FastSwim", IE_Released, this, &ASwimCharacter::EndFastSwim);
-	
 	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &ASwimCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("Move Right / Left", this, &ASwimCharacter::MoveRight);
-
-	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	//PlayerInputComponent->BindAxis("Turn Right / Left Mouse", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("Turn Right / Left", this, &APawn::AddControllerYawInput);
-	//PlayerInputComponent->BindAxis("Turn Right / Left Gamepad", this, &ATP_ThirdPersonCharacter::TurnAtRate);
-	//PlayerInputComponent->BindAxis("Look Up / Down Mouse", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("Look Up / Down", this, &APawn::AddControllerPitchInput);
-	//PlayerInputComponent->BindAxis("Look Up / Down Gamepad", this, &ATP_ThirdPersonCharacter::LookUpAtRate);
-
-	// handle touch devices
-	//PlayerInputComponent->BindTouch(IE_Pressed, this, &ASwimCharacter::TouchStarted);
-	//PlayerInputComponent->BindTouch(IE_Released, this, &ASwimCharacter::TouchStopped);
 }
-
-/*
-void ASwimCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
-{
-	Jump();
-}
-
-void ASwimCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
-{
-	StopJumping();
-}
-
-void ASwimCharacter::TurnAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * TurnRateGamepad * GetWorld()->GetDeltaSeconds());
-}
-
-void ASwimCharacter::LookUpAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * TurnRateGamepad * GetWorld()->GetDeltaSeconds());
-}*/
 
 void ASwimCharacter::BeginPlay()
 {
@@ -135,7 +107,11 @@ void ASwimCharacter::BeginPlay()
 	//Stamina = 100.0f;
 	SwimmingSpeed = 200.0f;
 	GetWorldTimerManager().SetTimer(SwimmingHandle, this, &ASwimCharacter::HandleFastSwim, 1.0f, true);
-	
+
+	if(TimerAudioComp && CountDownFX)
+	{
+		TimerAudioComp->SetSound(CountDownFX);
+	}
 }
 
 void ASwimCharacter::MoveForward(float Value)
@@ -149,9 +125,7 @@ void ASwimCharacter::MoveForward(float Value)
 		// get forward vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		AddMovementInput(Direction, Value);
-
-		//FString ValueString = FString::SanitizeFloat(Value);
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, ValueString);
+		
 	}
 }
 
@@ -196,7 +170,11 @@ void ASwimCharacter::Tick(float DeltaTime)
 	// FString SwimString = FString::SanitizeFloat(SwimSpeed);
 	//FString SwimString = FString::
 	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, SwimString);
-	//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, UKismetStringLibrary::Conv_BoolToString(IsFastSwimming));
+	
+	if(Minutes == 0 && Seconds == 5)
+	{
+		TimerAudioComp->Play(0.f);
+	}
 
 }
 
@@ -245,6 +223,7 @@ void ASwimCharacter::CountDown()
 	{
 		Seconds = Seconds - 1;
 	}
+	
 	else
 	{
 		if(Minutes == 0)
@@ -252,11 +231,6 @@ void ASwimCharacter::CountDown()
 			// Game Over depending on rings collected
 			IsGameOver = true;
 			UGameplayStatics::OpenLevel(this, "GameOver");
-		}
-
-		else if(Minutes == 0 && Seconds <= 5)
-		{
-			//SetInstanceVariables();
 		}
 		
 		else
@@ -343,7 +317,7 @@ void ASwimCharacter::StartFastSwim()
 
 	// Code here that detects when stamina is low while pressing shift
 	
-	SwimmingSpeed = 300;
+	SwimmingSpeed = 400;
 	GetCharacterMovement()->MaxSwimSpeed = SwimmingSpeed;
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(SwimmingSpeed));
 }
@@ -403,18 +377,6 @@ void ASwimCharacter::ControlFastSwimTimer(bool IsFastSwim)
 	}
 }
 
-
-// Code below was supposed to work but it was not being implemented
-/*void ASwimCharacter::EnterWater_Implementation()
-{
-	InWater = true;
-	WaterZ = GetActorLocation().Z;
-}
-
-void ASwimCharacter::ExitWater_Implementation()
-{
-	InWater = false;
-}*/
 
 
 
