@@ -65,6 +65,9 @@ protected:
 
 	void CountDown();
 
+	//UFUNCTION(BlueprintImplementableEvent)
+	//void EnterWat();
+
 	UPROPERTY(BlueprintReadOnly)
 	int Minutes = 2;
 

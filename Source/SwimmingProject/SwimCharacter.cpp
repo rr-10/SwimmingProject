@@ -178,6 +178,7 @@ void ASwimCharacter::Tick(float DeltaTime)
 
 }
 
+
 // Instead of tick, the function runs using the timer
 void ASwimCharacter::Swimming()
 {
@@ -319,7 +320,7 @@ void ASwimCharacter::StartFastSwim()
 	
 	SwimmingSpeed = 400;
 	GetCharacterMovement()->MaxSwimSpeed = SwimmingSpeed;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(SwimmingSpeed));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(SwimmingSpeed));
 }
 
 void ASwimCharacter::EndFastSwim()
@@ -328,7 +329,7 @@ void ASwimCharacter::EndFastSwim()
 	ControlFastSwimTimer(false); 
 	SwimmingSpeed = 200;
 	GetCharacterMovement()->MaxSwimSpeed = SwimmingSpeed;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::SanitizeFloat(SwimmingSpeed));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::SanitizeFloat(SwimmingSpeed));
 }
 
 void ASwimCharacter::HandleFastSwim()
