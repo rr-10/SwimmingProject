@@ -5,13 +5,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 //#include "SwimmingProject/SwimInterface.h"
+#include "SwimInterface.h"
 #include "Components/AudioComponent.h"
 #include "Sound/SoundCue.h"
 #include "SwimCharacter.generated.h"
 
 
 UCLASS(config=Game)
-class ASwimCharacter : public ACharacter
+class ASwimCharacter : public ACharacter//, public ISwimInterface
 {
 	GENERATED_BODY()
 
@@ -41,11 +42,20 @@ public:
 
 	bool SwimDoOnce, WalkDoOnce;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Find")
+	TSubclassOf<AActor> FluidClass;
+
 	class USwimInstance* SwimInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
 	USoundCue* CountDownFX;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
+	float SwimmingZ = 65.0f;
+	
+	UPROPERTY(BlueprintReadWrite)
+	int CollectedRings = 0;
+	
 protected:
 	
 	virtual void BeginPlay() override;
@@ -63,10 +73,22 @@ protected:
 	UFUNCTION()
 	void Swimming();
 
+	UFUNCTION()
+	void AscendSwimmingHeight();
+
+	UFUNCTION()
+	void DescendSwimmingHeight();
+
 	void CountDown();
+
+	//virtual void EnterWater_Implementation() override;
+	//virtual void ExitWater_Implementation() override;
 
 	//UFUNCTION(BlueprintImplementableEvent)
 	//void EnterWat();
+
+	// UFUNCTION(BlueprintCallable)
+	// void SwimmingHeightSet(AActor* ActorObj);
 
 	UPROPERTY(BlueprintReadOnly)
 	int Minutes = 2;
@@ -77,8 +99,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	int MaxRings = 5;
 
-	UPROPERTY(BlueprintReadWrite)
-	int CollectedRings = 0;
+	
 
 	bool IsGameOver;
 	
@@ -97,7 +118,7 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite)
 	int MaxStamina = 100;
-
+	
 	FTimerHandle StaminaHandle;
 	FTimerHandle SwimmingHandle;
 

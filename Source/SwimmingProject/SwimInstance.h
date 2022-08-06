@@ -15,6 +15,6 @@ class SWIMMINGPROJECT_API USwimInstance : public UGameInstance
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Ring)
-	int InstanceRings;
+	UPROPERTY(BlueprintReadWrite, Category=Ring)
+	int InstanceRings = 0;
 };

@@ -13,6 +13,7 @@
 #include "GameFramework/PhysicsVolume.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "TimerManager.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/KismetStringLibrary.h"
@@ -89,10 +90,13 @@ void ASwimCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("FastSwim", IE_Pressed, this, &ASwimCharacter::StartFastSwim);
 	PlayerInputComponent->BindAction("FastSwim", IE_Released, this, &ASwimCharacter::EndFastSwim);
+	//PlayerInputComponent->BindAction("Ascend", IE_Pressed, this, &ASwimCharacter::DescendSwimmingHeight);
+	//PlayerInputComponent->BindAction("Ascend", IE_Pressed, this, &ASwimCharacter::AscendSwimmingHeight);
 	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &ASwimCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("Move Right / Left", this, &ASwimCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn Right / Left", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("Look Up / Down", this, &APawn::AddControllerPitchInput);
+	
 }
 
 void ASwimCharacter::BeginPlay()
@@ -178,6 +182,32 @@ void ASwimCharacter::Tick(float DeltaTime)
 
 }
 
+/*
+void ASwimCharacter::EnterWater_Implementation()
+{
+	InWater = true;
+	WaterZ = GetActorLocation().Z;
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::SanitizeFloat(WaterZ));
+}
+
+void ASwimCharacter::ExitWater_Implementation()
+{
+	InWater = false;
+}
+*/
+
+/*void ASwimCharacter::SwimmingHeightSet(AActor* ActorObj)
+{
+	//TArray<AActor*> FoundActors;
+	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), FluidClass, FoundActors);
+
+	float LocationZ = ActorObj->GetActorLocation().Z;
+	
+	if(LocationZ > 65)
+	{
+		SetActorLocation(FVector(ActorObj->GetActorLocation().X, ActorObj->GetActorLocation().Y, GetActorLocation().Z));
+	}
+}*/
 
 // Instead of tick, the function runs using the timer
 void ASwimCharacter::Swimming()
@@ -216,6 +246,25 @@ void ASwimCharacter::Swimming()
 	}
 	
 }
+
+void ASwimCharacter::AscendSwimmingHeight()
+{
+	if(GetActorLocation().Z > 65.0f)
+	{
+		AddMovementInput(FVector(GetActorLocation().X, GetActorLocation().Y, SwimmingZ), 1);
+	}
+
+	else
+	{
+		AddMovementInput(FVector(GetActorLocation().X, GetActorLocation().Y, SwimmingZ), 1);
+	}
+}
+
+void ASwimCharacter::DescendSwimmingHeight()
+{
+	AddMovementInput(FVector(0,0,25), -1);
+}
+
 
 // Timer function
 void ASwimCharacter::CountDown()
