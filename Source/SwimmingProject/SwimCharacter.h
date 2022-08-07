@@ -49,12 +49,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
 	USoundCue* CountDownFX;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
-	float SwimmingZ = 65.0f;
 	
 	UPROPERTY(BlueprintReadWrite)
 	int CollectedRings = 0;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
+	//float SwimmingZ;
+
+	//UPROPERTY(BlueprintReadWrite)
+	//float SwimZ;
 	
 protected:
 	
@@ -73,11 +76,11 @@ protected:
 	UFUNCTION()
 	void Swimming();
 
-	UFUNCTION()
-	void AscendSwimmingHeight();
+	//UFUNCTION()
+	//void AscendSwimmingHeight();
 
-	UFUNCTION()
-	void DescendSwimmingHeight();
+	//UFUNCTION()
+	//void DescendSwimmingHeight();
 
 	void CountDown();
 

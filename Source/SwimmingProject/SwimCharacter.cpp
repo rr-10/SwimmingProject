@@ -29,6 +29,9 @@ ASwimCharacter::ASwimCharacter()
 	// set our turn rate for input
 	TurnRateGamepad = 50.f;
 
+	//SwimmingZ = 65.f;
+	//SwimZ = 65.f;
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -247,7 +250,7 @@ void ASwimCharacter::Swimming()
 	
 }
 
-void ASwimCharacter::AscendSwimmingHeight()
+/*void ASwimCharacter::AscendSwimmingHeight()
 {
 	if(GetActorLocation().Z > 65.0f)
 	{
@@ -263,7 +266,7 @@ void ASwimCharacter::AscendSwimmingHeight()
 void ASwimCharacter::DescendSwimmingHeight()
 {
 	AddMovementInput(FVector(0,0,25), -1);
-}
+}*/
 
 
 // Timer function
