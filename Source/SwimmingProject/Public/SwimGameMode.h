@@ -6,9 +6,6 @@
 #include "GameFramework/GameModeBase.h"
 #include "SwimGameMode.generated.h"
 
-/**
- * 
- */
 UCLASS(MinimalAPI)
 class ASwimGameMode : public AGameModeBase
 {

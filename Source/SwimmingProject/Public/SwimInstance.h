@@ -7,7 +7,8 @@
 #include "SwimInstance.generated.h"
 
 /**
- * 
+ * The only thing used in the instance was a reference, which is used to display
+ * how many rings the player has collected for the game over screen
  */
 UCLASS()
 class SWIMMINGPROJECT_API USwimInstance : public UGameInstance

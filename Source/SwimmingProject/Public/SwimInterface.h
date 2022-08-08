@@ -6,7 +6,6 @@
 #include "UObject/Interface.h"
 #include "SwimInterface.generated.h"
 
-// This class does not need to be modified.
 UINTERFACE(MinimalAPI, Blueprintable)
 class USwimInterface : public UInterface
 {
@@ -17,10 +16,9 @@ class SWIMMINGPROJECT_API ISwimInterface
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	// Can be called in both Blueprint or C++
+	// These functions are implemented in the BP_Ocean and BP_SwimCharacter blueprints
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category=Swim)
 	void EnterWater();
 

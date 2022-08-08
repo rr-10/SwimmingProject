@@ -1,10 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "SwimCharacter.h"
-
-#include <string>
-
-//#include "SwimInstance.h"
+#include "SwimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -18,31 +15,20 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/KismetStringLibrary.h"
 
-//////////////////////////////////////////////////////////////////////////
-// SwimCharacter
 
 ASwimCharacter::ASwimCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-
-	// set our turn rate for input
-	TurnRateGamepad = 50.f;
-
-	//SwimmingZ = 65.f;
-	//SwimZ = 65.f;
-
+	
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
-
-	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
-	// instead of recompiling to adjust them
+	GetCharacterMovement()->bOrientRotationToMovement = true; 	
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
@@ -59,9 +45,6 @@ ASwimCharacter::ASwimCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-	
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -76,51 +59,47 @@ ASwimCharacter::ASwimCharacter()
 	if(CountFXObj.Succeeded())
 	{
 		CountDownFX = CountFXObj.Object;
-
 		TimerAudioComp = CreateDefaultSubobject<UAudioComponent>(TEXT("TimerAudioComp"));
 		TimerAudioComp->SetupAttachment(RootComponent);
 	}
-	
 }
 
-// Input
 
+// Creation of a function that assigns Actions and Axis Values to specific functions
 void ASwimCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
-	// Set up gameplay key bindings
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-	PlayerInputComponent->BindAction("FastSwim", IE_Pressed, this, &ASwimCharacter::StartFastSwim);
-	PlayerInputComponent->BindAction("FastSwim", IE_Released, this, &ASwimCharacter::EndFastSwim);
+	PlayerInputComponent->BindAction("FastSwim", IE_Pressed, this, &ASwimCharacter::StartSwimmingFast);
+	PlayerInputComponent->BindAction("FastSwim", IE_Released, this, &ASwimCharacter::StopSwimmingFast);
 	//PlayerInputComponent->BindAction("Ascend", IE_Pressed, this, &ASwimCharacter::DescendSwimmingHeight);
 	//PlayerInputComponent->BindAction("Ascend", IE_Pressed, this, &ASwimCharacter::AscendSwimmingHeight);
 	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &ASwimCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("Move Right / Left", this, &ASwimCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn Right / Left", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("Look Up / Down", this, &APawn::AddControllerPitchInput);
-	
 }
 
 void ASwimCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FTimerHandle TimerHandle;
-	GetWorldTimerManager().SetTimer(TimerHandle, this, &ASwimCharacter::CountDown, 1.f, true, 0.0);
-	// Regen of stamina
-	//GetWorldTimerManager().SetTimer(StaminaHandle, this, &ASwimCharacter::DecreaseStamina, 1.0f, true);
-	GetWorldTimerManager().SetTimer(StaminaHandle, this, &ASwimCharacter::RegenStamina, 1.0f, true);
+	// Setting default values on start of game
 	Stamina = 100.0f;
 	SwimmingSpeed = 200.0f;
-	GetWorldTimerManager().SetTimer(SwimmingHandle, this, &ASwimCharacter::HandleFastSwim, 1.0f, true);
+	
+	// Setting up timers to deal with regeneration of stamina and timers in place
+	GetWorldTimerManager().SetTimer(CountDownHandle, this, &ASwimCharacter::CountDown, 1.0f, true);
+	GetWorldTimerManager().SetTimer(StaminaHandle, this, &ASwimCharacter::RegenStamina, 1.0f, true);
+	GetWorldTimerManager().SetTimer(SwimmingHandle, this, &ASwimCharacter::HandleSwimmingFast, 1.0f, true);
 
+	// If both are declared in the class, then set the sound for TimerAudioComp
 	if(TimerAudioComp && CountDownFX)
-	{
 		TimerAudioComp->SetSound(CountDownFX);
-	}
 }
 
+// Function that deals with Player moving Forwards/Backwards
 void ASwimCharacter::MoveForward(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
@@ -132,27 +111,10 @@ void ASwimCharacter::MoveForward(float Value)
 		// get forward vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		AddMovementInput(Direction, Value);
-		
 	}
 }
 
-/*void ASwimCharacter::StartFastSwimming()
-{
-	//float Speed = CharacterMovement->MaxSwimSpeed;
-	GetCharacterMovement()->MaxSwimSpeed = 300;
-	IsFastSwimming = true;
-	DecreaseStamina();
-	FString SpeedString = FString::SanitizeFloat(GetCharacterMovement()->MaxSwimSpeed);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("FAST SWIM") + SpeedString);
-}*/
-
-/*void ASwimCharacter::EndFastSwimming()
-{
-	GetCharacterMovement()->MaxSwimSpeed = 150;
-	IsFastSwimming = false;
-	RecuperateStamina();
-}*/
-
+// Function that deals with Player moving Left/Right
 void ASwimCharacter::MoveRight(float Value)
 {
 	if ( (Controller != nullptr) && (Value != 0.0f) )
@@ -177,114 +139,26 @@ void ASwimCharacter::Tick(float DeltaTime)
 	// FString SwimString = FString::SanitizeFloat(SwimSpeed);
 	//FString SwimString = FString::
 	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, SwimString);
-	
+}
+
+// Function that plays the countdown SFX
+void ASwimCharacter::CountDownTimerFX() const
+{
 	if(Minutes == 0 && Seconds == 5)
-	{
 		TimerAudioComp->Play(0.f);
-	}
-
 }
 
-/*
-void ASwimCharacter::EnterWater_Implementation()
-{
-	InWater = true;
-	WaterZ = GetActorLocation().Z;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::SanitizeFloat(WaterZ));
-}
 
-void ASwimCharacter::ExitWater_Implementation()
-{
-	InWater = false;
-}
-*/
-
-/*void ASwimCharacter::SwimmingHeightSet(AActor* ActorObj)
-{
-	//TArray<AActor*> FoundActors;
-	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), FluidClass, FoundActors);
-
-	float LocationZ = ActorObj->GetActorLocation().Z;
-	
-	if(LocationZ > 65)
-	{
-		SetActorLocation(FVector(ActorObj->GetActorLocation().X, ActorObj->GetActorLocation().Y, GetActorLocation().Z));
-	}
-}*/
-
-// Instead of tick, the function runs using the timer
-/*
-void ASwimCharacter::Swimming()
-{
-	float DifferenceZ = WaterZ - GetActorLocation().Z;
-	float HalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-	bool WaterVolume = GetCharacterMovement()->GetPhysicsVolume()->bWaterVolume;
-	
-	//bool SwimDoOnce, WalkDoOnce;
-	
-	if (InWater)
-	{
-		if(DifferenceZ > HalfHeight)
-		{
-			// Do Once Macro
-			if(SwimDoOnce)
-			{
-				WaterVolume = true;
-				GetCharacterMovement()->SetMovementMode(MOVE_Swimming);
-				SwimDoOnce = !SwimDoOnce;
-			}
-		}
-		
-		else
-		{
-			if(DifferenceZ < HalfHeight)
-			{
-				if(WalkDoOnce)
-				{
-					WaterVolume = false;
-					GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-					WalkDoOnce = !WalkDoOnce;
-				}
-			}
-		}
-	}
-	
-}
-*/
-
-/*void ASwimCharacter::AscendSwimmingHeight()
-{
-	if(GetActorLocation().Z > 65.0f)
-	{
-		AddMovementInput(FVector(GetActorLocation().X, GetActorLocation().Y, SwimmingZ), 1);
-	}
-
-	else
-	{
-		AddMovementInput(FVector(GetActorLocation().X, GetActorLocation().Y, SwimmingZ), 1);
-	}
-}
-
-void ASwimCharacter::DescendSwimmingHeight()
-{
-	AddMovementInput(FVector(0,0,25), -1);
-}*/
-
-
-// Timer function
+// Function for the countdown timer
 void ASwimCharacter::CountDown()
 {
 	if(Seconds != 0)
-	{
 		Seconds = Seconds - 1;
-	}
 	
 	else
 	{
 		if(Minutes == 0)
-		{
 			UGameplayStatics::OpenLevel(this, "GameOver");
-		}
 		
 		else
 		{
@@ -294,141 +168,189 @@ void ASwimCharacter::CountDown()
 	}
 }
 
-// Inactive function which would crash the project and memory allocations
-/*void ASwimCharacter::SetInstanceVariables()
+// Function that dictates when the player can start to swim fast
+void ASwimCharacter::StartSwimmingFast()
 {
-	CollectedRings = SwimInstance->InstanceRings;
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(SwimInstance->InstanceRings));
-}*/
-
-/*void ASwimCharacter::RecuperateStamina()
-{
-	Stamina++;
-
-	Stamina = FMath::Clamp(Stamina, MinStamina, MaxStamina);
-
-	if(Stamina != MaxStamina)
-	{
-		if(!IsFastSwimming)
-		{
-			RecuperateStamina();
-		}
-	}
-}*/
-
-/*void ASwimCharacter::DecreaseStamina()
-{
-	Stamina--;
-
-	Stamina = FMath::Clamp(Stamina, MinStamina, MaxStamina);
-	
-	if(Stamina == 0)
-	{
-		EndFastSwimming();
-	}
-
-	else
-	{
-		if(IsFastSwimming)
-		{
-			DecreaseStamina();
-		}
-	}
-}*/
-
-/*void ASwimCharacter::StaminaBar()
-{
-	if (Stamina >= 1)
-		Stamina = 1;
-	else
-	{
-		++Stamina;
-	}
-}*/
-
-void ASwimCharacter::StartFastSwim()
-{
-	//if((Stamina > 10.0f)||(Stamina < 10.0f))
+	// If the player's stamina is less than 10 or higher, then player can fast swim
 	if((Stamina > 10.0f)||(Stamina < 10.0f))
 	{
-		IsFastSwimming = true;
-		ControlFastSwimTimer(true);
+		IsSwimmingFast = true;
+		ControlSwimmingFastTimer(true);
 	}
 
-	/*else if(Stamina < 10.0f)
-	{
-		IsFastSwimming = true;
-		ControlFastSwimTimer(true);
-		
-	}*/
-	
+	// If Stamina ever gets lower than 0, stop swimming fast
 	else if(Stamina <= 0.0f)
-	{
-		//IsFastSwimming = false;
-		ControlFastSwimTimer(false);
-	}
+		ControlSwimmingFastTimer(false);
 
-	// Code here that detects when stamina is low while pressing shift
-	
+	// Default value when fast swimming and setting it as the swimming speed from GetCharacterMovement's MaxSwimSpeed
 	SwimmingSpeed = 400;
 	GetCharacterMovement()->MaxSwimSpeed = SwimmingSpeed;
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(SwimmingSpeed));
 }
 
-void ASwimCharacter::EndFastSwim()
+// Function when player is not fast swimming, sets the swimming speed back to 200 and sets MaxSwimSpeed
+void ASwimCharacter::StopSwimmingFast()
 {
-	IsFastSwimming = false;
-	ControlFastSwimTimer(false); 
+	IsSwimmingFast = false;
+	ControlSwimmingFastTimer(false); 
 	SwimmingSpeed = 200;
 	GetCharacterMovement()->MaxSwimSpeed = SwimmingSpeed;
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::SanitizeFloat(SwimmingSpeed));
 }
 
-void ASwimCharacter::HandleFastSwim()
+// If the player is swimming fast, lose stamina by 2 but if the stamina gets lower than 0, stop swimming fast
+void ASwimCharacter::HandleSwimmingFast()
 {
-	if(IsFastSwimming)
+	if(IsSwimmingFast)
 	{
 		LoseStamina(2.0f);
 		if(Stamina <= 0.0f)
-			EndFastSwim();
+			StopSwimmingFast();
 	}
 }
 
-
+// If the player is not swimming fast, stamina regains by one otherwise if higher than 100, cap it at 100
 void ASwimCharacter::RegenStamina()
 {
-	
 	if(Stamina >= 100.0f)
 		Stamina = 100.0f;
+	
 	else
-	{
 		Stamina++;
-		//GetWorldTimerManager().UnPauseTimer(StaminaHandle);
-	}
 }
 
+// If player is fast swimming, the stamina will be deducted
+// otherwise if stamina is at 0, cap it at 0
 void ASwimCharacter::LoseStamina(float Value)
 {
 	if(Stamina - Value < 0.0f)
-	{
 		Stamina = 0.0f;
-	}
+	
 	else 
 		Stamina -= Value;
-	//GetWorldTimerManager().PauseTimer(StaminaHandle);
 }
 
-void ASwimCharacter::ControlFastSwimTimer(bool IsFastSwim)
+// Toggle function that deals with pausing stamina timers when swimming fast
+void ASwimCharacter::ControlSwimmingFastTimer(bool IsSwimFast) const
 {
-	if(IsFastSwimming)
-	{
+	IsSwimFast = IsSwimmingFast;
+	
+	if(IsSwimFast)
 		GetWorldTimerManager().PauseTimer(StaminaHandle);
-	}
+
 	else
-	{
 		GetWorldTimerManager().UnPauseTimer(StaminaHandle);
-	}
 }
+
+// DEPRECATED FUNCTIONS - Some functions were created as a means to not use
+// blueprint nodes or functions but it did not translate well due to various errors
+// As a result, some were swapped for blueprint implementations or removed
+
+/*
+	// Implementation of EnterWater that would execute when in contact with water
+	void ASwimCharacter::EnterWater_Implementation()
+	{
+		InWater = true;
+		WaterZ = GetActorLocation().Z;
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::SanitizeFloat(WaterZ));
+	}
+
+	// Implementation of ExitWater that would execute when exiting water
+	void ASwimCharacter::ExitWater_Implementation()
+	{
+		InWater = false;
+	}
+	
+	// An attempt at stabilising the swimming height which did not do its intended function
+	// This worked better in Blueprint than C++
+	void ASwimCharacter::SwimmingHeightSet(AActor* ActorObj)
+	{
+		//TArray<AActor*> FoundActors;
+		//UGameplayStatics::GetAllActorsOfClass(GetWorld(), FluidClass, FoundActors);
+
+		float LocationZ = ActorObj->GetActorLocation().Z;
+		
+		if(LocationZ > 65)
+		{
+			SetActorLocation(FVector(ActorObj->GetActorLocation().X, ActorObj->GetActorLocation().Y, GetActorLocation().Z));
+		}
+	}
+
+	// A C++ function that would do the swimming behaviour once in contact but
+	// After three weeks, this approach was not working so it was swapped out to
+	// blueprint as it worked better
+	void ASwimCharacter::Swimming()
+	{
+		float DifferenceZ = WaterZ - GetActorLocation().Z;
+		float HalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		bool WaterVolume = GetCharacterMovement()->GetPhysicsVolume()->bWaterVolume;
+		
+		//bool SwimDoOnce, WalkDoOnce;
+		
+		if (InWater)
+		{
+			if(DifferenceZ > HalfHeight)
+			{
+				// Do Once Macro
+				if(SwimDoOnce)
+				{
+					WaterVolume = true;
+					GetCharacterMovement()->SetMovementMode(MOVE_Swimming);
+					SwimDoOnce = !SwimDoOnce;
+				}
+			}
+			
+			else
+			{
+				if(DifferenceZ < HalfHeight)
+				{
+					if(WalkDoOnce)
+					{
+						WaterVolume = false;
+						GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+						WalkDoOnce = !WalkDoOnce;
+					}
+				}
+			}
+		}
+		
+	}
+	
+	// These were functions that were created that would deal with underwater diving but while
+	// they were swapped to Blueprint, underwater diving was unfortunately scrapped due to the
+	// buoyancy physics messing it up. Diving underwater was fine but once you got back to the surface,
+	// the player flops out and switches movement mode as soon as it goes out of water and as a result,
+	// the Z value (even being set to 65 when swimming), was not constant as it went beyond and ended up
+	// swimming up to the surface for a long duration of time.
+	// Apart from time constraints, the diving had to be scrapped.
+	void ASwimCharacter::AscendSwimmingHeight()
+	{
+		if(GetActorLocation().Z > 65.0f)
+		{
+			AddMovementInput(FVector(GetActorLocation().X, GetActorLocation().Y, SwimmingZ), 1);
+		}
+
+		else
+		{
+			AddMovementInput(FVector(GetActorLocation().X, GetActorLocation().Y, SwimmingZ), 1);
+		}
+	}
+
+	void ASwimCharacter::DescendSwimmingHeight()
+	{
+		AddMovementInput(FVector(0,0,25), -1);
+	}
+
+	// Inactive function which would crash the project due to memory allocations
+	void ASwimCharacter::SetInstanceVariables()
+	{
+		CollectedRings = SwimInstance->InstanceRings;
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(SwimInstance->InstanceRings));
+	}
+
+ */
+
+	
+	
+
 
 
 
