@@ -1,4 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// SwimmingProject.h
+// Written by Remo Reji Thomas (rr-10)
 
 #pragma once
 

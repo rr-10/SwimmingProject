@@ -1,4 +1,7 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// SwimCharacter.h
+// Written by Remo Reji Thomas (rr-10)
+
+// Code is for the BP_SwimCharacter implementation
 
 #pragma once
 
@@ -10,7 +13,7 @@
 #include "Sound/SoundCue.h"
 #include "SwimCharacter.generated.h"
 
-
+// Developed from ThirdPersonCharacter.h as base class
 UCLASS(config=Game)
 class ASwimCharacter : public ACharacter//, public ISwimInterface
 {

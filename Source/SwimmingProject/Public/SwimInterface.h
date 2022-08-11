@@ -1,5 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// SwimInterface.h
+// Written by Remo Reji Thomas (rr-10)
 
+// Code is for the BP_SwimInterface implementation
 #pragma once
 
 #include "CoreMinimal.h"

@@ -1,4 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// SwimmingProject.cpp
+// Written by Remo Reji Thomas (rr-10)
 
 #include "SwimmingProject.h"
 #include "Modules/ModuleManager.h"

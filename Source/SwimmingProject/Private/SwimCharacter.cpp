@@ -1,4 +1,7 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// SwimCharacter.cpp
+// Written by Remo Reji Thomas (rr-10)
+
+// Code is for the BP_SwimCharacter implementation
 
 #include "SwimCharacter.h"
 #include "SwimInstance.h"
@@ -15,7 +18,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/KismetStringLibrary.h"
 
-
+// Developed from ThirdPersonCharacter.cpp as base class
 ASwimCharacter::ASwimCharacter()
 {
 	// Set size for collision capsule
@@ -54,7 +57,8 @@ ASwimCharacter::ASwimCharacter()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Game Instance loaded");
 	}*/
-	
+
+	// https://forums.unrealengine.com/t/playing-monitoring-stopping-sounds-c/425224/4
 	static ConstructorHelpers::FObjectFinder<USoundCue> CountFXObj (TEXT("SoundCue'/Game/Sounds/5SecsLeft_Cue.5SecsLeft_Cue'"));
 	if(CountFXObj.Succeeded())
 	{
@@ -95,6 +99,7 @@ void ASwimCharacter::BeginPlay()
 	GetWorldTimerManager().SetTimer(SwimmingHandle, this, &ASwimCharacter::HandleSwimmingFast, 1.0f, true);
 
 	// If both are declared in the class, then set the sound for TimerAudioComp
+	// https://docs.unrealengine.com/5.0/en-US/API/Runtime/Engine/Components/UAudioComponent/SetSound/
 	if(TimerAudioComp && CountDownFX)
 		TimerAudioComp->SetSound(CountDownFX);
 }
@@ -142,6 +147,7 @@ void ASwimCharacter::Tick(float DeltaTime)
 }
 
 // Function that plays the countdown SFX
+// https://forums.unrealengine.com/t/how-to-play-a-soundcue-in-c/339969/7
 void ASwimCharacter::CountDownTimerFX() const
 {
 	if(Minutes == 0 && Seconds == 5)
